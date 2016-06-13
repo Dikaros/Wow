@@ -58,6 +58,7 @@ public class NormalAsyNet extends AsyNet<String> {
             }
             return result;
         } catch (Exception e) {
+            cancledThrowable  = e;
             cancel(true);
         }
         return  null;

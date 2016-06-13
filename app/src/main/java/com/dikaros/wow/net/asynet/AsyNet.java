@@ -59,14 +59,16 @@ public abstract class AsyNet<T> extends AsyncTask<String, Integer, T> {
      */
     OnNetStateChangedListener<T> onNetStateChangedListener;
 
+    Throwable cancledThrowable;
 
     @Override
     protected void onCancelled() {
         //asynctask取消时
         if (onNetStateChangedListener != null) {
-            onNetStateChangedListener.whenException();
+            onNetStateChangedListener.whenException(cancledThrowable);
         }
     }
+
 
     @Override
     protected void onPostExecute(T t) {
@@ -136,7 +138,7 @@ public abstract class AsyNet<T> extends AsyncTask<String, Integer, T> {
                         param = "";
                         break;
                     case JSON_OR_XML_FILE:
-                        param += key + "=" + jsonOrXmlFile;
+                        param += (key + "=" + jsonOrXmlFile);
                         break;
                     case KEY_VALUE_PAIR:
                         for (String k : keyValuePair.keySet()
@@ -189,7 +191,7 @@ public abstract class AsyNet<T> extends AsyncTask<String, Integer, T> {
         /**
          * 出现了错误的时候
          */
-        public void whenException();
+        public void whenException(Throwable t);
 
         /**
          * 执行进度

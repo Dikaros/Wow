@@ -27,4 +27,6 @@ dependencies {
     compile 'com.google.code.gson:gson:2.2.4'
     compile files('libs/android-viewbadger.jar')
     compile 'com.android.support:design:23.2.1'
+    compile 'de.hdodenhof:circleimageview:2.0.0'
+
 }
