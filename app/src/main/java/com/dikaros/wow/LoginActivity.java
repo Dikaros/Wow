@@ -19,6 +19,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -27,6 +28,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -37,6 +39,7 @@ import android.widget.TextView;
 import com.dikaros.wow.net.asynet.AsyNet;
 import com.dikaros.wow.net.asynet.NormalAsyNet;
 import com.dikaros.wow.net.asynet.block.Block;
+import com.dikaros.wow.service.WebSocketService;
 import com.dikaros.wow.util.AlertUtil;
 import com.dikaros.wow.util.SimpifyUtil;
 import com.dikaros.wow.util.Util;
@@ -48,6 +51,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -78,7 +83,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         SimpifyUtil.findAll(this);
-        populateAutoComplete();
+//        populateAutoComplete();
 
         String userMsg = Util.getPreference(this,"user_msg");
         if (userMsg!=null){
@@ -89,6 +94,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 String userPhone = root.getString("phone");
                 String sessionId = root.getString("sessionId");
                 Config.WEBSOCKET_SESSION = sessionId;
+                Config.userId = root.getLong("id");
                 mPhoneView.setText(userPhone);
                 mPasswordView.setText(userPassword);
                 
@@ -135,35 +141,35 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         return true;
     }
 
-    private void populateAutoComplete() {
-        if (!mayRequestContacts()) {
-            return;
-        }
+//    private void populateAutoComplete() {
+//        if (!mayRequestContacts()) {
+//            return;
+//        }
+//
+//        getLoaderManager().initLoader(0, null, this);
+//    }
 
-        getLoaderManager().initLoader(0, null, this);
-    }
-
-    private boolean mayRequestContacts() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
-        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mPhoneView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        @TargetApi(Build.VERSION_CODES.M)
-                        public void onClick(View v) {
-                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-                        }
-                    });
-        } else {
-            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-        }
-        return false;
-    }
+//    private boolean mayRequestContacts() {
+//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+//            return true;
+//        }
+//        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+//            return true;
+//        }
+//        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
+//            Snackbar.make(mPhoneView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
+//                    .setAction(android.R.string.ok, new View.OnClickListener() {
+//                        @Override
+//                        @TargetApi(Build.VERSION_CODES.M)
+//                        public void onClick(View v) {
+//                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
+//                        }
+//                    });
+//        } else {
+//            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
+//        }
+//        return false;
+//    }
 
     /**
      * Callback received when a permissions request has been completed.
@@ -173,7 +179,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                            @NonNull int[] grantResults) {
         if (requestCode == REQUEST_READ_CONTACTS) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                populateAutoComplete();
+//                populateAutoComplete();
             }
         }
     }
@@ -335,11 +341,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     //登录成功
                     AlertUtil.toastMess(this, message + "");
                     //保存用户信息
-                    Util.setPreference(this,"user_msg",message);
+                    Util.setPreference(this,"user_msg",result);
                     String sessionId = object.getString("sessionId");
                     Config.WEBSOCKET_SESSION = sessionId;
+                    Config.userId = object.getLong("id");
                     Intent intent = new Intent(this,ShowActivity.class);
                     startActivity(intent);
+                    Intent service = new Intent(this,ShowActivity.class);
+                    intent.putExtra(WebSocketService.START_WEBSOCKET,true);
+                    intent.putExtra(WebSocketService.USER_ID,object.getLong("id"));
+                    startService(service);
+                    finish();
                 } else if (code == 102) {
                     mPasswordView.setError(message + "");
                     mPasswordView.requestFocus();
@@ -383,6 +395,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         int ADDRESS = 0;
         int IS_PRIMARY = 1;
     }
+
+
 
 
 

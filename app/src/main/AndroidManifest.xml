@@ -33,7 +33,13 @@
         <activity
             android:name=".ShowActivity"
             android:label="@string/title_activity_show"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".ChatActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            ></activity>
+
+        <service android:name=".service.WebSocketService" android:enabled="true"
+            ></service>
     </application>
 
 </manifest>

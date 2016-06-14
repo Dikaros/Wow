@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="com.dikaros.wow.ChatActivity">
+
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/llgray"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- 下面部分 -->
+
+        <LinearLayout
+            android:id="@+id/rg_main_buttom"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:background="@color/llgray"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/et_conversation"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_edit_text"
+                    android:padding="10dp"
+                    android:textSize="15sp" />
+
+                <Button
+                    android:id="@+id/btn_conversation_send"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_weight="4"
+                    android:background="@drawable/bg_send_button"
+                    android:enabled="true"
+                    android:text="发送"
+                    android:textColor="@color/white"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <RadioGroup
+                    android:id="@+id/rg_conversation_panel"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/panel_top_bottom"
+                        android:layout_marginLeft="@dimen/panel_left_right"
+                        android:layout_marginRight="@dimen/panel_left_right"
+                        android:layout_marginTop="@dimen/panel_top_bottom"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel_ptt"
+                        android:button="@null" />
+
+                    <RadioButton
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/panel_top_bottom"
+                        android:layout_marginLeft="@dimen/panel_left_right"
+                        android:layout_marginRight="@dimen/panel_left_right"
+                        android:layout_marginTop="@dimen/panel_top_bottom"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel_ptv"
+                        android:button="@null" />
+
+                    <RadioButton
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/panel_top_bottom"
+                        android:layout_marginLeft="@dimen/panel_left_right"
+                        android:layout_marginRight="@dimen/panel_left_right"
+                        android:layout_marginTop="@dimen/panel_top_bottom"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel_image"
+                        android:button="@null" />
+
+                    <RadioButton
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/panel_top_bottom"
+                        android:layout_marginLeft="@dimen/panel_left_right"
+                        android:layout_marginRight="@dimen/panel_left_right"
+                        android:layout_marginTop="@dimen/panel_top_bottom"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel_camera"
+                        android:button="@null" />
+
+                    <RadioButton
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/panel_top_bottom"
+                        android:layout_marginLeft="@dimen/panel_left_right"
+                        android:layout_marginRight="@dimen/panel_left_right"
+                        android:layout_marginTop="@dimen/panel_top_bottom"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel_hongbao"
+                        android:button="@null" />
+
+                    <RadioButton
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/panel_top_bottom"
+                        android:layout_marginLeft="@dimen/panel_left_right"
+                        android:layout_marginRight="@dimen/panel_left_right"
+                        android:layout_marginTop="@dimen/panel_top_bottom"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel_emotion"
+                        android:button="@null" />
+
+                    <RadioButton
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/panel_top_bottom"
+                        android:layout_marginLeft="@dimen/panel_left_right"
+                        android:layout_marginRight="@dimen/panel_left_right"
+                        android:layout_marginTop="@dimen/panel_top_bottom"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel_plus"
+                        android:button="@null" />
+                </RadioGroup>
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+        <include
+            layout="@layout/content_chat"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/rg_main_buttom" />
+
+    </RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

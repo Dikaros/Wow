@@ -32,7 +32,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="80dp"
         android:textSize="26sp"
-        android:text="Dikaors"
+        android:text="Dikaros"
         android:textColor="@color/gray"
         android:layout_centerHorizontal="true"
 

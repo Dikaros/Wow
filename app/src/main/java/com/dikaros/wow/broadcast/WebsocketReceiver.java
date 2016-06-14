@@ -27,17 +27,11 @@ public class WebSocketReceiver extends BroadcastReceiver {
                 break;
             case WebSocketService.ACTION_WEBSOCKET_ON_MESSAGE:
 
-////                    AlertUtil.toastMess(context,"comes a message");
-//                String msg = intent.getStringExtra(WebSocketService.WEBSOCKET_MESSAGE);
-//                int msgCount = intent.getIntExtra(WebSocketService.DATA_MESSAGE_COUNT, 0);
-//                realData.updateViewByRealTime(msg, msgCount, recordMode, ivLight);
 
 
                 break;
             case WebSocketService.ACTION_WEBSOCKET_OPEN:
                 //连接成功时
-//                AlertUtil.toastMess(context, "connected to server");
-//                connecting = true;
 
 
                 break;
