@@ -3,10 +3,15 @@ package com.dikaros.wow.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.util.TypedValue;
 
 import com.dikaros.wow.Config;
+import com.squareup.picasso.Picasso;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -80,4 +85,66 @@ public class Util {
                 .getString(key, null);
     }
 
+    /**
+     * 将文字转化为base64格式
+     * @param str
+     * @return
+     */
+    public static String toBase64(String str) {
+        byte[] b = null;
+        String s = null;
+        try {
+            b = str.getBytes("utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        if (b != null) {
+            try {
+                s = new String(Base64.encode(b,Base64.DEFAULT),"utf-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return s;
+    }
+    /**
+     * 将文字转化为base64格式
+     * @param str
+     * @return
+     */
+    public static String toBase64(byte[] str) {
+        String s = null;
+        if (str != null) {
+            try {
+                s = new String(Base64.encode(str,Base64.DEFAULT),"utf-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return s;
+    }
+    /**
+     * 将base64转化为文字
+     * @param base64
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    public static String getFromBase64(String base64)  {
+        try {
+            return new String(Base64.decode(base64.getBytes(),Base64.DEFAULT),"utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 获取Bitmap
+     * @param base64
+     * @return
+     */
+    public static Bitmap getBitmapFromBase64(String base64){
+        byte[] bytes= Base64.decode(base64,Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+    }
 }

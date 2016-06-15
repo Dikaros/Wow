@@ -24,18 +24,22 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.dikaros.wow.bean.Friend;
+import com.dikaros.wow.bean.ImMessage;
 import com.dikaros.wow.net.asynet.AsyNet;
 import com.dikaros.wow.net.asynet.NormalAsyNet;
 import com.dikaros.wow.service.WebSocketService;
 import com.dikaros.wow.util.AlertUtil;
 import com.dikaros.wow.util.SimpifyUtil;
+import com.dikaros.wow.util.Util;
 import com.dikaros.wow.util.annotation.FindView;
 import com.dikaros.wow.view.RecyclerViewDivider;
 import com.google.gson.Gson;
+import com.readystatesoftware.viewbadger.BadgeView;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -63,8 +67,10 @@ public class ShowActivity extends AppCompatActivity
 
     RelativeLayout blankBoard;
 
+    //朋友适配器
     FriendAdapter friendAdapter;
 
+    //网络工具
     NormalAsyNet net;
 
     MyReceiver receiver;
@@ -111,6 +117,9 @@ public class ShowActivity extends AppCompatActivity
             public void onClick(View v, int index) {
                 Intent intent = new Intent(ShowActivity.this,ChatActivity.class);
                 intent.putExtra("friend",friends.get(index));
+                intent.putExtra("start_position",friends.get(index).getNewMessage());
+                friends.get(index).setNewMessage(0);
+                friendAdapter.notifyDataSetChanged();
                 startActivity(intent);
             }
 
@@ -163,9 +172,9 @@ public class ShowActivity extends AppCompatActivity
             net.cancel(true);
             net = null;
         }
-        HashMap<String, ?> map = new HashMap<>();
 
         net = new NormalAsyNet(Config.HTTP_GET_FRIEND, "jsonFile", "{\"userId\":" + Config.userId + "}", AsyNet.NetMethod.POST);
+        Log.e("wow",Config.userId+"");
         net.setOnNetStateChangedListener(this);
         net.execute();
     }
@@ -220,6 +229,11 @@ public class ShowActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
+        }else if (id==R.id.nav_log_out){
+            Util.setPreference(this,"user_msg",null);
+            Intent i = new Intent(this,LoginActivity.class);
+            startActivity(i);
+            finish();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -320,6 +334,14 @@ public class ShowActivity extends AppCompatActivity
                     }
                 });
             }
+
+            if (friend.getNewMessage()>0){
+                holder.tvMessageCount.setText(friend.getNewMessage()+"");
+//                badgeView.show();
+                holder.tvMessageCount.setAlpha(1f);
+            }else {
+                holder.tvMessageCount.setAlpha(0f);
+            }
         }
 
         @Override
@@ -337,6 +359,10 @@ public class ShowActivity extends AppCompatActivity
 
             @FindView(R.id.tv_friend_last_message)
             TextView tvLastMsg;
+
+            @FindView(R.id.tv_message_count)
+            TextView tvMessageCount;
+
 
             public ViewHolder(View itemView) {
                 super(itemView);
@@ -359,8 +385,16 @@ public class ShowActivity extends AppCompatActivity
 
                     break;
                 case WebSocketService.ACTION_WEBSOCKET_ON_MESSAGE:
-
-
+                    ImMessage message = (ImMessage) intent.getSerializableExtra(WebSocketService.WEBSOCKET_MESSAGE);
+//                    Config.addToReveivedMap(message);
+                    for (int i=0;i<friends.size();i++){
+                        Friend f = friends.get(i);
+                        if (f.getFriendId()==message.getSenderId()){
+//                            a
+                            f.addMessage();
+                            friendAdapter.notifyItemChanged(i);
+                        }
+                    }
 
                     break;
                 case WebSocketService.ACTION_WEBSOCKET_OPEN:

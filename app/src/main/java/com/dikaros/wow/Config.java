@@ -2,6 +2,7 @@ package com.dikaros.wow;
 
 import com.dikaros.wow.bean.ImMessage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,6 +21,26 @@ public class Config {
     public static HashMap<Long,List<ImMessage>> reveivedMap=new HashMap<>();
 
     public static HashMap<Long,List<ImMessage>> sendedMap=new HashMap<>();
+
+    public static void addToSendMap(ImMessage message){
+        if (sendedMap.containsKey(message.getSenderId())){
+            sendedMap.get(message.getReceiverId()).add(message);
+        }else {
+            List<ImMessage> messages = new ArrayList<>();
+            messages.add(message);
+            sendedMap.put(message.getReceiverId(),messages);
+        }
+    }
+
+    public static void addToReveivedMap(ImMessage message){
+        if (reveivedMap.containsKey(message.getSenderId())){
+            reveivedMap.get(message.getSenderId()).add(message);
+        }else {
+            List<ImMessage> messages = new ArrayList<>();
+            messages.add(message);
+            reveivedMap.put(message.getSenderId(),messages);
+        }
+    }
 
     public static String WEBSOCKET_SESSION = null;
 

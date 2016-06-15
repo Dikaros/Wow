@@ -89,6 +89,7 @@ public class WebSocketService extends Service {
 
             String message = intent.getStringExtra(SEND_MESSAGE);
             if (message!=null&&client!=null){
+                Log.e("websocket","send"+message);
                 client.send(message);
             }
         }
@@ -134,14 +135,7 @@ public class WebSocketService extends Service {
                 Log.e("websocket", "websocket onMessage"+messageCount);
                 ImMessage msg = gson.fromJson(message,ImMessage.class);
                 if (msg!=null){
-                    if (Config.reveivedMap.containsKey(msg.getSenderId())) {
-//                        Config.reveivedMap.put(msg.getSenderId(), msg);
-                        Config.reveivedMap.get(msg.getSenderId()).add(msg);
-                    }else {
-                        List<ImMessage> messages = new ArrayList<ImMessage>();
-                        messages.add(msg);
-                        Config.reveivedMap.put(msg.getSenderId(),messages);
-                    }
+                    Config.addToReveivedMap(msg);
                     //保存本地信息
                 }
                 Intent messageIntent = new Intent();

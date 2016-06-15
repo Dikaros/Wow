@@ -20,7 +20,6 @@ public class ImMessage implements Serializable,Comparable<ImMessage> {
     public ImMessage() {
     }
 
-    long id;
     long senderId;
     long receiverId;
     long time;
@@ -82,19 +81,6 @@ public class ImMessage implements Serializable,Comparable<ImMessage> {
                 + ", time=" + time + ", msg=" + msg + "]";
     }
 
-    /**
-     * @return id
-     */
-    public long getId() {
-        return id;
-    }
-
-    /**
-     * @param id
-     */
-    public void setId(long id) {
-        this.id = id;
-    }
 
 
     /**

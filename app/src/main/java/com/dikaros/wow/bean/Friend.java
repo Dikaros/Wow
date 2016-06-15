@@ -21,6 +21,20 @@ public class Friend implements Serializable{
 
     private int friendRank;
 
+    public int getNewMessage() {
+        return newMessage;
+    }
+
+    public void setNewMessage(int newMessage) {
+        this.newMessage = newMessage;
+    }
+
+    public void addMessage(){
+        newMessage++;
+    }
+
+    private int newMessage;
+
     @Override
     public String toString() {
         return "Friend{" +
