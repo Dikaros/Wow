@@ -76,7 +76,7 @@
                     android:layout_weight="4"
                     android:background="@drawable/bg_send_button"
                     android:enabled="true"
-                    android:text="发送"
+                    android:text="@string/send"
                     android:textColor="@color/white"
                     android:textSize="15sp" />
             </LinearLayout>

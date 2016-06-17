@@ -53,8 +53,13 @@ public class AlertUtil {
         return aDialog;
     }
 
+
+    /**
+     * 显示底部弹出信息
+     * @param anchor 挂载view
+     * @param message 信息
+     */
     public static void showSnack(View anchor, String message) {
         Snackbar.make(anchor, message, Snackbar.LENGTH_SHORT).show();
-
     }
 }

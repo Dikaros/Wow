@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:text="用户名"
+            android:text="@string/user_name"
             android:textSize="20sp" />
 
         <TextView
@@ -34,7 +34,7 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:layout_marginTop="10dp"
-            android:text="最近的一条信息"
+            android:text="@string/personal_message"
             android:textColor="@color/gray"
             android:textSize="16sp" />
     </LinearLayout>

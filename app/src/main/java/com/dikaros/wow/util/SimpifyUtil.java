@@ -22,15 +22,20 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 
 /**
+ * 使用注解快速找到view
+ * 使用注解快速设置监听器
  * Created by Dikaros on 2016/5/18.
  */
 public class SimpifyUtil {
 
+    //映射名称与id
     static HashMap<String, Integer> idMap;
+    //映射名称与drawable
     static HashMap<String, Integer> drawableMap;
+
     static HashMap<String, Integer> colorMap;
     static HashMap<String, Integer> stringMap;
-    static HashMap<String,Integer> dimenMap;
+    static HashMap<String, Integer> dimenMap;
 
 
     /**
@@ -212,10 +217,10 @@ public class SimpifyUtil {
 
                 if (field.isAnnotationPresent(FindColor.class)) {
                     FindColor fc = field.getAnnotation(FindColor.class);
-                    int newColor=-100;
+                    int newColor = -100;
                     if (fc.value() == -1) {
                         initColorMap(activity);
-                        newColor =activity.getResources().getColor(colorMap.get(fieldName));
+                        newColor = activity.getResources().getColor(colorMap.get(fieldName));
                     } else {
                         newColor = activity.getResources().getColor(fc.value());
                     }
@@ -241,7 +246,7 @@ public class SimpifyUtil {
                     field.set(activity, newString);
                 }
 
-                if (field.isAnnotationPresent(FindDimen.class)){
+                if (field.isAnnotationPresent(FindDimen.class)) {
                     FindDimen fd = field.getAnnotation(FindDimen.class);
                     String newString;
                     if (fd.value() == -1) {
@@ -270,9 +275,9 @@ public class SimpifyUtil {
                         @Override
                         public void onClick(View v) {
                             try {
-                                if (method.getParameterTypes().length==1) {
+                                if (method.getParameterTypes().length == 1) {
                                     method.invoke(activity, v);
-                                }else {
+                                } else {
                                     method.invoke(activity);
                                 }
                             } catch (
@@ -288,17 +293,17 @@ public class SimpifyUtil {
                 if (method.isAnnotationPresent(OnItemClick.class)) {
                     OnItemClick onItemClick = method.getAnnotation(OnItemClick.class);
                     int rid = onItemClick.value();
-                    if (activity.findViewById(rid) instanceof AdapterView){
+                    if (activity.findViewById(rid) instanceof AdapterView) {
                         ((AdapterView) activity.findViewById(rid)).setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             @Override
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 try {
-                                    if (method.getParameterTypes().length==4) {
+                                    if (method.getParameterTypes().length == 4) {
                                         method.invoke(activity, parent, view, position, id);
-                                    }else if (method.getParameterTypes().length==1){
-                                        method.invoke(activity,position);
-                                    }else if (method.getParameterTypes().length==3){
-                                        method.invoke(activity,parent,view,position);
+                                    } else if (method.getParameterTypes().length == 1) {
+                                        method.invoke(activity, position);
+                                    } else if (method.getParameterTypes().length == 3) {
+                                        method.invoke(activity, parent, view, position);
                                     }
                                 } catch (IllegalAccessException e) {
                                     e.printStackTrace();
@@ -316,9 +321,9 @@ public class SimpifyUtil {
                         @Override
                         public boolean onLongClick(View v) {
                             try {
-                                if (method.getParameterTypes().length==1) {
+                                if (method.getParameterTypes().length == 1) {
                                     method.invoke(activity, v);
-                                }else {
+                                } else {
                                     method.invoke(activity);
                                 }
                             } catch (
@@ -336,17 +341,17 @@ public class SimpifyUtil {
                 if (method.isAnnotationPresent(OnItemLongClick.class)) {
                     OnItemLongClick onItemLongClick = method.getAnnotation(OnItemLongClick.class);
                     int rid = onItemLongClick.value();
-                    if (activity.findViewById(rid) instanceof AdapterView){
+                    if (activity.findViewById(rid) instanceof AdapterView) {
                         ((AdapterView) activity.findViewById(rid)).setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
                             @Override
                             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                                 try {
-                                    if (method.getParameterTypes().length==4) {
+                                    if (method.getParameterTypes().length == 4) {
                                         method.invoke(activity, parent, view, position, id);
-                                    }else if (method.getParameterTypes().length==1){
-                                        method.invoke(activity,position);
-                                    }else if (method.getParameterTypes().length==3){
-                                        method.invoke(activity,parent,view,position);
+                                    } else if (method.getParameterTypes().length == 1) {
+                                        method.invoke(activity, position);
+                                    } else if (method.getParameterTypes().length == 3) {
+                                        method.invoke(activity, parent, view, position);
                                     }
                                 } catch (IllegalAccessException e) {
                                     e.printStackTrace();
@@ -369,205 +374,6 @@ public class SimpifyUtil {
 
     }
 
-
-
-
-//    /**
-//     * 为所有的view添加监听器
-//     *
-//     * @param activity
-//     */
-//    public static void registListenerforAll(final Activity activity) {
-//        try {
-//
-//
-//            //获取所有的成员变量
-//            Field[] fields = activity.getClass().getDeclaredFields();
-//            //遍历
-//            for (Field field : fields) {
-//
-//                /*
-//                快速注册onClick事件
-//                 */
-//                if (field.isAnnotationPresent(OnClick.class) && View.class.isAssignableFrom(field.getType())) {
-//                    //成员变量类型
-//                    Class fieldType = field.getType();
-//                    //获取注解对象
-//                    OnClick click = field.getAnnotation(OnClick.class);
-//                    //获取注解对象的value
-//                    String methodName = click.value();
-//
-//                    //需要调用的方法所属的类
-//                    Class from = click.from();
-//                    //如果from是默认的则调用当前类的方法
-//                    if (from == Void.class) {
-//                        from = activity.getClass();
-//                    }
-//
-//                    //点击方法
-//                    final Method clickMethod = from.getMethod(methodName, View.class);
-//
-//                    //获取setOnClicklistener方法
-//                    Method m = fieldType.getMethod("setOnClickListener", View.OnClickListener.class);
-//                    //设置field可设置
-//                    field.setAccessible(true);
-//
-//                    m.invoke(field.get(activity), new View.OnClickListener() {
-//
-//                        @Override
-//                        public void onClick(View v) {
-//                            try {
-//                                //调用指定方法名的方法
-//                                clickMethod.invoke(activity, v);
-//                            } catch (IllegalAccessException e) {
-//                                e.printStackTrace();
-//                            } catch (InvocationTargetException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    });
-//                    //取消field可设置
-//                    field.setAccessible(false);
-//                }
-//
-//
-//
-//                /*
-//                快速注册OnItemClick事件
-//                 */
-//                if (field.isAnnotationPresent(OnItemClick.class) && AdapterView.class.isAssignableFrom(field.getType())) {
-//                    //成员变量类型
-//                    Class fieldType = field.getType();
-//                    //获取注解对象
-//                    OnItemClick click = field.getAnnotation(OnItemClick.class);
-//                    //获取注解对象的value
-//                    String methodName = click.value();
-//                    //需要调用的方法所属的类
-//                    Class from = click.from();
-//                    //如果from是默认的则调用当前类的方法
-//                    if (from == Void.class) {
-//                        from = activity.getClass();
-//                    }
-//
-//                    Log.i("from",activity.getClass().getName());
-//
-//                    //点击方法
-//                    final Method clickMethod = from.getDeclaredMethod(methodName, AdapterView.class, View.class, int.class, long.class);
-//
-//                    //获取setOnClicklistener方法
-//                    Method m = fieldType.getMethod("setOnItemClickListener", AdapterView.OnItemClickListener.class);
-//                    //设置field可设置
-//                    field.setAccessible(true);
-//
-//                    m.invoke(field.get(activity), new AdapterView.OnItemClickListener() {
-//
-//                        @Override
-//                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                            try {
-//                                clickMethod.invoke(activity, parent, view, position, id);
-//                            } catch (IllegalAccessException e) {
-//                                e.printStackTrace();
-//                            } catch (InvocationTargetException e) {
-//                                e.printStackTrace();
-//                            }
-//
-//                        }
-//                    });
-//                    //取消field可设置
-//                    field.setAccessible(false);
-//                }
-//
-//                /*
-//                快速注册onLongClick事件
-//                 */
-//                if (field.isAnnotationPresent(OnLongClick.class) && View.class.isAssignableFrom(field.getType())) {
-//                    //成员变量类型
-//                    Class fieldType = field.getType();
-//                    //获取注解对象
-//                    OnLongClick click = field.getAnnotation(OnLongClick.class);
-//                    //获取注解对象的value
-//                    String methodName = click.value();
-//                    Class from = click.from();
-//                    //如果from是默认的则调用当前类的方法
-//                    if (from == Void.class) {
-//                        from = activity.getClass();
-//                    }
-//                    //点击方法
-//                    final Method clickMethod = from.getMethod(methodName, View.class);
-//
-//                    //获取setOnClicklistener方法
-//                    Method m = fieldType.getMethod("setOnLongClickListener", View.OnLongClickListener.class);
-//                    //设置field可设置
-//                    field.setAccessible(true);
-//
-//                    m.invoke(field.get(activity), new View.OnLongClickListener() {
-//
-//                        @Override
-//                        public boolean onLongClick(View v) {
-//
-//                            try {
-//                                return (boolean) clickMethod.invoke(activity, v);
-//                            } catch (IllegalAccessException e) {
-//                                e.printStackTrace();
-//                            } catch (InvocationTargetException e) {
-//                                e.printStackTrace();
-//                            }
-//                            return false;
-//                        }
-//                    });
-//                    //取消field可设置
-//                    field.setAccessible(false);
-//                }
-//
-//
-//                /*
-//                快速注册OnItemOnClick使劲
-//                 */
-//                if (field.isAnnotationPresent(OnItemLongClick.class) && AdapterView.class.isAssignableFrom(field.getType())) {
-//                    //成员变量类型
-//                    Class fieldType = field.getType();
-//                    //获取注解对象
-//                    OnItemLongClick click = field.getAnnotation(OnItemLongClick.class);
-//                    //获取注解对象的value
-//                    String methodName = click.value();
-//                    Class from = click.from();
-//                    //如果from是默认的则调用当前类的方法
-//                    if (from == Void.class) {
-//                        from = activity.getClass();
-//                    }
-//                    //点击方法
-//                    final Method clickMethod = from.getMethod(methodName, AdapterView.class, View.class, int.class, long.class);
-//
-//                    //获取setOnClicklistener方法
-//                    Method m = fieldType.getMethod("setOnItemLongClickListener", AdapterView.OnItemLongClickListener.class);
-//                    //设置field可设置
-//                    field.setAccessible(true);
-//
-//                    m.invoke(field.get(activity), new AdapterView.OnItemLongClickListener() {
-//
-//                        @Override
-//                        public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-//                            try {
-//                                return (boolean) clickMethod.invoke(activity, parent, view, position, id);
-//                            } catch (IllegalAccessException e) {
-//                                e.printStackTrace();
-//                            } catch (InvocationTargetException e) {
-//                                e.printStackTrace();
-//                            }
-//                            return false;
-//                        }
-//
-//                    });
-//                    //取消field可设置
-//                    field.setAccessible(false);
-//                }
-//
-//            }
-//        } catch (Exception e) {
-////            Log.e("simpifyUtil", e.getMessage());
-//
-//            e.printStackTrace();        }
-//    }
 
     /**
      * 这种情况不能用于加载非view资源

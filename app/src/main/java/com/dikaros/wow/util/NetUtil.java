@@ -22,15 +22,19 @@ public class NetUtil {
      */
     public static boolean isNetworkAvailable(Context context) {
 
+        //获取网络事件管理器
         ConnectivityManager connectivity = (ConnectivityManager) context
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
+        //获取不到则返回false
         if (connectivity == null) {
             return false;
         } else {
+            //获取到了查询当前的网络状态
             NetworkInfo[] info = connectivity.getAllNetworkInfo();
             if (info != null) {
 
                 for (int i = 0; i < info.length; i++) {
+                    //如果连接上了网络则返回true
                     if (info[i].getState() == NetworkInfo.State.CONNECTED) {
                         return true;
                     }
@@ -41,10 +45,18 @@ public class NetUtil {
         return false;
     }
 
+    /**
+     * 判断当前是否使用了wifi
+     * @param mContext
+     * @return
+     */
     public static boolean isWifi(Context mContext) {
+        //获取网络事件管理器
         ConnectivityManager connectivityManager = (ConnectivityManager) mContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
+        //获取网络信息
         NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
+        //检查状态
         if (activeNetInfo != null
                 && activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
             return true;
@@ -53,10 +65,10 @@ public class NetUtil {
     }
 
     /**
-     * 发送短信验证码
+     * 发送短信验证码（同步）
      *
-     * @param phoneNumber
-     * @param content
+     * @param phoneNumber 手机号
+     * @param content 验证码
      */
     public static String sendSmsCode(String phoneNumber, String content) {
         if (phoneNumber == null || content == null) {
@@ -65,27 +77,36 @@ public class NetUtil {
         BufferedReader reader = null;
         String result = null;
         StringBuffer sbf = new StringBuffer();
+        //地址
         String httpUrl = "http://apis.baidu.com/baidu_communication/sms_verification_code/smsverifycode";
+        //参数
         String httpArg = "phone=" + phoneNumber + "&content=" + content;
         httpUrl = httpUrl + "?" + httpArg;
 
         try {
             URL url = new URL(httpUrl);
+            //创建并打开连接
             HttpURLConnection connection = (HttpURLConnection) url
                     .openConnection();
+            //http 请方法
             connection.setRequestMethod("GET");
-            // ????apikey??HTTP header
+            // api key
             connection.setRequestProperty("apikey",
                     "db642b2fac4fafe26849179ad8883592 ");
+            //连接api
             connection.connect();
+            //获取返回信息
             InputStream is = connection.getInputStream();
+            //读取
             reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
             String strRead = null;
             while ((strRead = reader.readLine()) != null) {
                 sbf.append(strRead);
                 sbf.append("\r\n");
             }
+            //关闭读取器
             reader.close();
+            //返回结果
             result = sbf.toString();
 //            Log.i("result", result);
         } catch (Exception e) {

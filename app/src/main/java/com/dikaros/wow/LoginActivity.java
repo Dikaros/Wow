@@ -345,6 +345,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     String sessionId = object.getString("sessionId");
                     Config.WEBSOCKET_SESSION = sessionId;
                     Config.userId = object.getLong("id");
+                    Config.userName = object.getString("name");
+                    Config.userMessage = object.getString("personalMessage");
                     Intent intent = new Intent(this,ShowActivity.class);
                     startActivity(intent);
                     Intent service = new Intent(this,ShowActivity.class);

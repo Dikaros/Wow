@@ -26,6 +26,17 @@ public class ImMessage implements Serializable,Comparable<ImMessage> {
     String msg;
     int type;
     String httpSessionId;
+
+    String filePath;
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
     /**
      * @return senderId
      */

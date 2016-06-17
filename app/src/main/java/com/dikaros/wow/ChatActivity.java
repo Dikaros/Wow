@@ -2,13 +2,19 @@ package com.dikaros.wow;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.IBinder;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -26,6 +32,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -33,12 +40,14 @@ import android.widget.Toast;
 
 import com.dikaros.wow.bean.Friend;
 import com.dikaros.wow.bean.ImMessage;
+import com.dikaros.wow.service.AudioService;
 import com.dikaros.wow.service.WebSocketService;
 import com.dikaros.wow.util.AlertUtil;
 import com.dikaros.wow.util.SimpifyUtil;
 import com.dikaros.wow.util.Util;
 import com.dikaros.wow.util.annotation.FindView;
 import com.dikaros.wow.util.annotation.OnClick;
+import com.dikaros.wow.view.AudioView;
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
@@ -47,6 +56,7 @@ import org.java_websocket.util.Base64;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -63,6 +73,7 @@ public class ChatActivity extends AppCompatActivity {
 
     Friend friend;
 
+    //接收器
     MyReceiver receiver;
 
     @FindView(R.id.et_conversation)
@@ -77,8 +88,31 @@ public class ChatActivity extends AppCompatActivity {
     @FindView(R.id.rcv_chat)
     RecyclerView rcvChat;
 
+    @FindView(R.id.ll_sp_area)
+    LinearLayout llSpArea;
+    //音频播放器
+    MediaPlayer player;
 
+    //适配器
     ChatAdapter adaper;
+
+    //音乐binder
+    AudioService.AudioBinder binder;
+
+    //服务连接器
+    ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.e("wow","服务启动");
+            AlertUtil.toastMess(ChatActivity.this,"服务启动");
+            binder = (AudioService.AudioBinder) service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     public static final int ACTION_AUDIO = 0;
 
@@ -105,24 +139,30 @@ public class ChatActivity extends AppCompatActivity {
             //添加进来
             messages.addAll(Config.reveivedMap.get(friend.getFriendId()));
         }
+
         //增加发送的历史信息
         if (Config.sendedMap.containsKey(friend.getFriendId())) {
             messages.addAll(Config.sendedMap.get(friend.getFriendId()));
         }
 
+        //排序
         Collections.sort(messages);
 
-
+        //线性布局管理器
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-//        layoutManager.setReverseLayout(true);
+        //设置从底部开始
         layoutManager.setStackFromEnd(true);
+        //设置垂直布局
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        //为RecyclerView设置布局管理器
         rcvChat.setLayoutManager(layoutManager);
 
         //增加适配器
         adaper = new ChatAdapter();
         rcvChat.setAdapter(adaper);
         srlChat.setEnabled(false);
+
+        //设置文字输入框的文字改变事件监听器
         etConversation.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -135,6 +175,11 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
+                /*
+                如果输入框没有文字
+                则设置发送按钮不可用
+                否则设置可用
+                 */
                 if (s.toString().length() > 0) {
                     btnSend.setEnabled(true);
                 } else {
@@ -143,20 +188,21 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
+        //移动到上次关闭的位置
         rcvChat.scrollToPosition(messages.size() - startPosition);
-//        rgChatPanel.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(RadioGroup group, int checkedId) {
-//                switch (checkedId) {
-//                    case 4:
-//                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//                        startActivityForResult(intent, ACTION_CARAMA);
-//                        break;
-//                }
-//            }
-//        });
+
+        Intent service = new Intent(this,AudioService.class);
+
+        bindService(service,connection,BIND_AUTO_CREATE);
+
+
     }
 
+    /**
+     * 点击特殊功能区相机按钮
+     *
+     * @param v
+     */
     @OnClick(R.id.btn_chat_camera)
     public void sendCameraIntent(View v) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -165,45 +211,111 @@ public class ChatActivity extends AppCompatActivity {
 
 
     @Override
+    protected void onDestroy() {
+        unbindService(connection);
+        super.onDestroy();
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            new AsyncTask<Void, Void, String>() {
+            switch (requestCode) {
+                //如果是照相机信息
+                case ACTION_CARAMA:
+                    //创建一个异步任务并执行
+                    new AsyncTask<Void, Void, String>() {
+                        @Override
+                        protected String doInBackground(Void... params) {
+                            //获取data
+                            Bundle bundle = data.getExtras();
+                            //获取摄像头捕捉的bitmap
+                            Bitmap bitmap = (Bitmap) bundle.get("data");// 获取相机返回的数据，并转换为Bitmap图片格式
+                            //创建字节输出流
+                            ByteArrayOutputStream b = new ByteArrayOutputStream();
+                            //将bitmap输出到字节流中
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, b);// 把数据写入文件
+                            try {
+                                //刷新字节流
+                                b.flush();
+                                b.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            //图片转文字
+                            String msg = Util.toBase64(b.toByteArray());
+                            //发送信息
+                            return msg;
+                        }
 
-                @Override
-                protected String doInBackground(Void... params) {
-//            Toast.makeText(this, name, Toast.LENGTH_LONG).show();
-                    Bundle bundle = data.getExtras();
-                    Bitmap bitmap = (Bitmap) bundle.get("data");// 获取相机返回的数据，并转换为Bitmap图片格式
-                    ByteArrayOutputStream b = new ByteArrayOutputStream();
+                        @Override
+                        protected void onPostExecute(String msg) {
+                            //耗时操作执行完成后更新数据
+                            if (msg != null) {
+                                sendMessage(msg, 2);
+                            }
+                        }
+                    }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    break;
+                //如果是录音信息
+                case ACTION_AUDIO:
+                    //创建一个异步任务并执行
+                    new AsyncTask<Void, Void, String>() {
+                        @Override
+                        protected String doInBackground(Void... params) {
 
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, b);// 把数据写入文件
-                    try {
-                        b.flush();
-                        b.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    //图片转文字
-                    String msg = Util.toBase64(b.toByteArray());
-                    //发送信息
-                    return msg;
-                }
+                            try {
 
-                @Override
-                protected void onPostExecute(String msg) {
-                    //更新数据
-                    if (msg != null) {
-                        sendMessage(msg, 2);
-                    }
+                                //获取data
+                                Uri uri = data.getData();
+                                //根据uri获取文件名
+                                String fileName = Util.getAudioPathFromUri(ChatActivity.this, uri);
 
+//                                AlertUtil.toastMess(ChatActivity.this,fileName);
+                                Log.e("wow",fileName);
+                                //创建字节输出流
+                                ByteArrayOutputStream b = new ByteArrayOutputStream();
+                                //文件输入流
+                                FileInputStream fis = new FileInputStream(fileName);
+                                int len;
+                                byte[] buf = new byte[4096];
+                                while ((len = fis.read(buf)) != -1) {
+                                    //写入字节流
+                                    b.write(buf, 0, len);
+                                }
+                                //刷新字节流
+                                b.flush();
 
-                }
-            }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                                b.close();
+                                //音频转文字
+                                String msg = Util.toBase64(b.toByteArray());
+                                //发送信息
+                                return msg;
+                            } catch (Exception e) {
+                                Log.e("wow",e.toString()+"-");
+                            }
+                            return null;
+                        }
 
+                        @Override
+                        protected void onPostExecute(String msg) {
+                            //耗时操作执行完成后更新数据
+//                            AlertUtil.toastMess(ChatActivity.this,msg+"--");
+                            if (msg != null) {
+                                sendMessage(msg, 3);
+                            }
+                        }
+                    }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    break;
+            }
         }
     }
 
+    /**
+     * 通过按钮发送文字信息
+     *
+     * @param v
+     */
     @OnClick(R.id.btn_conversation_send)
     public void sendMessage(View v) {
         Intent intent = new Intent(this, WebSocketService.class);
@@ -213,23 +325,40 @@ public class ChatActivity extends AppCompatActivity {
         etConversation.setText("");
         messages.add(message);
         Config.addToSendMap(message);
-//        adaper.notifyDataSetChanged();
         adaper.notifyItemInserted(messages.size() - 1);
         rcvChat.scrollToPosition(messages.size() - 1);
-//        srlChat.scrollTo();
     }
 
+    @OnClick(R.id.btn_chat_ptt)
+    public void showAudioPanel(View v) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("audio/amr"); //String AUDIO_AMR = "audio/amr";
+        intent.setClassName("com.android.soundrecorder",
+                "com.android.soundrecorder.SoundRecorder");
+        startActivityForResult(intent, ACTION_AUDIO);
+    }
+
+    /**
+     * 发送其他类型信息
+     *
+     * @param msg
+     * @param type
+     */
     public void sendMessage(String msg, int type) {
         Intent intent = new Intent(this, WebSocketService.class);
+        //构建信息，信息条目通过Base64编码
         ImMessage message = new ImMessage(Config.userId, friend.getFriendId(), System.currentTimeMillis(), msg, type);
         intent.putExtra(WebSocketService.SEND_MESSAGE, message.toJson());
+        //启动服务发送信息
         startService(intent);
         etConversation.setText("");
         messages.add(message);
         Config.addToSendMap(message);
         adaper.notifyItemInserted(messages.size() - 1);
         rcvChat.scrollToPosition(messages.size() - 1);
+
     }
+
 
     @Override
     protected void onResume() {
@@ -339,7 +468,7 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
             //取得信息
-            ImMessage message = messages.get(position);
+            final ImMessage message = messages.get(position);
             //如果是文字信息
             if (message.getType() == 1) {
                 if (holder instanceof LeftViewHolder) {
@@ -349,31 +478,85 @@ public class ChatActivity extends AppCompatActivity {
                     leftViewHolder.tvMsg.setText(Util.getFromBase64(message.getMsg()));
                     leftViewHolder.tvMsg.setVisibility(View.VISIBLE);
                     leftViewHolder.btnMsgImage.setVisibility(View.GONE);
+                    leftViewHolder.btnPlayVoice.setVisibility(View.GONE);
+
+
                 } else if (holder instanceof RightViewHolder) {
                     RightViewHolder rightViewHolder = (RightViewHolder) holder;
                     Picasso.with(ChatActivity.this).load(Config.HTTP_AVATAR_ADDRESS + "/image/avator/" + Config.userId + ".png").placeholder(R.color.colorAccent).error(R.color.colorAccent).into(rightViewHolder.civ_friend);
                     rightViewHolder.tvMsg.setText(Util.getFromBase64(message.getMsg()));
                     rightViewHolder.btnMsgImage.setVisibility(View.GONE);
                     rightViewHolder.tvMsg.setVisibility(View.VISIBLE);
+                    rightViewHolder.btnPlayVoice.setVisibility(View.GONE);
+
 
 
                 }
-            } else if (message.getType() == 2) {
+            }
+            //图片信息
+            else if (message.getType() == 2) {
                 if (holder instanceof LeftViewHolder) {
                     LeftViewHolder leftViewHolder = (LeftViewHolder) holder;
-//                leftViewHolder.civ_friend
                     Picasso.with(ChatActivity.this).load(Config.HTTP_AVATAR_ADDRESS + "/image/avator/" + friend.getFriendId() + ".png").placeholder(R.color.colorPrimary).error(R.color.colorPrimary).into(leftViewHolder.civ_friend);
-//                    leftViewHolder.tvMsg.setText(Util.getFromBase64(message.getMsg()));
                     leftViewHolder.btnMsgImage.setImageBitmap(Util.getBitmapFromBase64(message.getMsg()));
                     leftViewHolder.btnMsgImage.setVisibility(View.VISIBLE);
                     leftViewHolder.tvMsg.setVisibility(View.GONE);
+                    leftViewHolder.btnPlayVoice.setVisibility(View.GONE);
                 } else if (holder instanceof RightViewHolder) {
                     RightViewHolder rightViewHolder = (RightViewHolder) holder;
                     Picasso.with(ChatActivity.this).load(Config.HTTP_AVATAR_ADDRESS + "/image/avator/" + Config.userId + ".png").placeholder(R.color.colorAccent).error(R.color.colorAccent).into(rightViewHolder.civ_friend);
-//                    rightViewHolder.tvMsg.setText(Util.getFromBase64(message.getMsg()));
                     rightViewHolder.btnMsgImage.setImageBitmap(Util.getBitmapFromBase64(message.getMsg()));
                     rightViewHolder.tvMsg.setVisibility(View.GONE);
                     rightViewHolder.btnMsgImage.setVisibility(View.VISIBLE);
+                    rightViewHolder.btnPlayVoice.setVisibility(View.GONE);
+
+                }
+            }
+            //语音信息
+            else if (message.getType() == 3) {
+                if (holder instanceof LeftViewHolder) {
+                    LeftViewHolder leftViewHolder = (LeftViewHolder) holder;
+                    Picasso.with(ChatActivity.this).load(Config.HTTP_AVATAR_ADDRESS + "/image/avator/" + friend.getFriendId() + ".png").placeholder(R.color.colorPrimary).error(R.color.colorPrimary).into(leftViewHolder.civ_friend);
+                    leftViewHolder.btnMsgImage.setVisibility(View.GONE);
+                    leftViewHolder.tvMsg.setVisibility(View.GONE);
+                    leftViewHolder.btnPlayVoice.setVisibility(View.VISIBLE);
+                    final String filePath= Util.storeFileFromBase64(ChatActivity.this,message.getMsg());
+                    message.setFilePath(filePath);
+
+                    leftViewHolder.btnPlayVoice.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (message.getFilePath()!=null) {
+                                try {
+                                    binder.play(message.getFilePath());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+                } else if (holder instanceof RightViewHolder) {
+                    RightViewHolder rightViewHolder = (RightViewHolder) holder;
+                    Picasso.with(ChatActivity.this).load(Config.HTTP_AVATAR_ADDRESS + "/image/avator/" + Config.userId + ".png").placeholder(R.color.colorAccent).error(R.color.colorAccent).into(rightViewHolder.civ_friend);
+                    rightViewHolder.tvMsg.setVisibility(View.GONE);
+                    rightViewHolder.btnMsgImage.setVisibility(View.GONE);
+                    rightViewHolder.btnPlayVoice.setVisibility(View.VISIBLE);
+                    final String filePath= Util.storeFileFromBase64(ChatActivity.this,message.getMsg());
+                    message.setFilePath(filePath);
+                    rightViewHolder.btnPlayVoice.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+//                            playVoice();
+                            if (message.getFilePath()!=null) {
+                                try {
+                                    binder.play(message.getFilePath());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+
 
                 }
             }
@@ -391,19 +574,27 @@ public class ChatActivity extends AppCompatActivity {
             return messages.size();
         }
 
+
         /**
          * 左边布局
          */
         class LeftViewHolder extends RecyclerView.ViewHolder {
 
+            //头像
             @FindView(R.id.civ_friend_lite)
             CircleImageView civ_friend;
 
+            //文字
             @FindView(R.id.tv_msg_left)
             TextView tvMsg;
 
+            //图片按钮
             @FindView(R.id.tv_msg_left_image)
             ImageButton btnMsgImage;
+
+            //语音
+            @FindView(R.id.btn_msg_left_voice)
+            Button btnPlayVoice;
 
 
             public LeftViewHolder(View itemView) {
@@ -426,10 +617,47 @@ public class ChatActivity extends AppCompatActivity {
             @FindView(R.id.tv_msg_right_image)
             ImageButton btnMsgImage;
 
+            @FindView(R.id.btn_msg_right_voice)
+            Button btnPlayVoice;
+
+
             public RightViewHolder(View itemView) {
                 super(itemView);
                 SimpifyUtil.findAll(this, itemView);
             }
+
         }
     }
+
+//    /**
+//     * 播放语音
+//     *
+//     * @param path
+//     */
+//    public void playVoice(String path) {
+//        try {
+//
+//            if (player == null) {
+//                player = new MediaPlayer();
+//                //设置音频原
+//                player.setDataSource(path);
+//
+//                //准备
+//                player.prepare();
+//                //播放
+//                player.start();
+//            } else {
+//                player.stop();
+//                //设置音频原
+//                player.setDataSource(path);
+//                //准备
+//                player.prepare();
+//                //播放
+//                player.start();
+//
+//            }
+//        } catch (IOException e) {
+//            Log.e("wow",e.toString()+e.getCause());
+//        }
+//    }
 }

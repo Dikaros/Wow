@@ -68,7 +68,7 @@
                     android:id="@+id/regist_confirm"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="验证码"
+                    android:hint="@string/confirm_code"
                     android:imeActionId="@+id/confirm"
                     android:imeActionLabel="@string/action_regist"
                     android:imeOptions="actionUnspecified"
@@ -81,7 +81,7 @@
             <Button
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
-                android:text="获取验证码"
+                android:text="@string/get_confirm"
                 android:id="@+id/btn_get_confirm" />
         </LinearLayout>
 

@@ -16,9 +16,6 @@ public class EntryActivity extends AppCompatActivity {
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-//            Intent intent = new Intent(EntryActivity.this, LoginActivity.class);
-//            startActivity(intent);
-//            finish();
             switch (msg.what) {
                 case 0:
                     Intent intent = new Intent(EntryActivity.this, LoginActivity.class);
@@ -45,32 +42,42 @@ public class EntryActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
+                    //休眠一秒
                     sleep(1000);
                 } catch (InterruptedException e) {
+
                     e.printStackTrace();
                 }
-//                handler.sendEmptyMessage(1);
-                String userMsg=Util.getPreference(EntryActivity.this, "user_msg") ;
-                if (userMsg== null) {
+                //获取本地存储的用户信息
+                String userMsg = Util.getPreference(EntryActivity.this, "user_msg");
 
+                //如果用户为空
+                if (userMsg == null) {
+                    //通知handler
                     handler.sendEmptyMessage(0);
-                } else {
-                    if (userMsg!=null){
-                        try {
-                            JSONObject root = new JSONObject(userMsg);
-                            String userName = root.getString("name");
-                            String userPassword = root.getString("password");
-                            String userPhone = root.getString("phone");
-                            String sessionId = root.getString("sessionId");
-                            Config.WEBSOCKET_SESSION = sessionId;
-                            Config.userId = root.getLong("id");
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    handler.sendEmptyMessage(1);
                 }
+                //如果用户信息不为空
+                else if (userMsg != null) {
+                    try {
+                        //解析用户信息
+                        JSONObject root = new JSONObject(userMsg);
+                        //获取用户名
+                        String userName = root.getString("name");
+                        //获取sessionId
+                        String sessionId = root.getString("sessionId");
+                        Config.userId = root.getLong("id");
+                        //设置sessionId
+                        Config.WEBSOCKET_SESSION = sessionId;
+                        //设置用户名
+                        Config.userName = userName;
+                        //设置用户信息
+                        Config.userMessage = root.getString("personalMessage");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                handler.sendEmptyMessage(1);
+
             }
         }.start();
 

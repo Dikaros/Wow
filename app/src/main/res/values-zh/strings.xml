@@ -37,5 +37,8 @@
     <string name="cell_message_default">这是一条信息</string>
     <string name="user_name">用户名</string>
     <string name="personal_message">个性签名</string>
+    <string name="friend_list">好友列表</string>
+    <string name="not_set_sign">他还没有设置个性签名</string>
     <string name="press_play_voice">点击播放语音消息</string>
+
 </resources>
