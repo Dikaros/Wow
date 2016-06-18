@@ -104,7 +104,7 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.e("wow","服务启动");
-            AlertUtil.toastMess(ChatActivity.this,"服务启动");
+//            AlertUtil.toastMess(ChatActivity.this,"服务启动");
             binder = (AudioService.AudioBinder) service;
         }
 

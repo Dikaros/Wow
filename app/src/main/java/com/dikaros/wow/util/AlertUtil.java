@@ -7,6 +7,8 @@ import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.Toast;
 
+import com.dikaros.wow.R;
+
 /**
  * Created by Dikaros on 2016/5/10.
  * 提示消息工具
@@ -32,7 +34,7 @@ public class AlertUtil {
     public static void simpleAlertDialog(Context context, String title,
                                          String message) {
         new AlertDialog.Builder(context).setTitle(title).setMessage(message)
-                .setNegativeButton("确定", null).show();
+                .setNegativeButton(R.string.action_ok, null).show();
     }
 
     /**
@@ -48,8 +50,8 @@ public class AlertUtil {
                                                String message, DialogInterface.OnClickListener okListener,
                                                DialogInterface.OnClickListener cancleListener) {
         AlertDialog aDialog = new AlertDialog.Builder(context).setTitle(title).setMessage(message)
-                .setNegativeButton("确定", okListener)
-                .setPositiveButton("取消", cancleListener).show();
+                .setNegativeButton(R.string.action_ok, okListener)
+                .setPositiveButton(R.string.action_cancel, cancleListener).show();
         return aDialog;
     }
 

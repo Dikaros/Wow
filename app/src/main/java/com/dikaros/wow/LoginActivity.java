@@ -44,6 +44,7 @@ import com.dikaros.wow.util.AlertUtil;
 import com.dikaros.wow.util.SimpifyUtil;
 import com.dikaros.wow.util.Util;
 import com.dikaros.wow.util.annotation.FindView;
+import com.google.zxing.WriterException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -343,16 +344,30 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     //保存用户信息
                     Util.setPreference(this,"user_msg",result);
                     String sessionId = object.getString("sessionId");
+                    //设置sessionId
                     Config.WEBSOCKET_SESSION = sessionId;
+                    //设置用户id
                     Config.userId = object.getLong("id");
+                    //设置用户名
                     Config.userName = object.getString("name");
-                    Config.userMessage = object.getString("personalMessage");
+                    //设置用户信息
+//                    Config.userMessage = object.getString("personalMessage");
+
+                    //启动聊天服务
+                    Intent service = new Intent(this,ShowActivity.class);
+                    service.putExtra(WebSocketService.START_WEBSOCKET,true);
+                    service.putExtra(WebSocketService.USER_ID,object.getLong("id"));
+                    //保存用户二维码
+                    JSONObject j = new JSONObject();
+                    j.put("userId",Config.userId);
+                    j.put("userName",Config.userName);
+                    j.put("personalMessage",Config.userMessage);
+                    j.put("avatarPath",Config.HTTP_AVATAR_ADDRESS+"/image/avator/" +Config.userId + ".png");
+                    Config.USER_QR_CODE = Util.generateQrCode(Util.toBase64(j.toString()));
+                    startService(service);
+                    //启动activity
                     Intent intent = new Intent(this,ShowActivity.class);
                     startActivity(intent);
-                    Intent service = new Intent(this,ShowActivity.class);
-                    intent.putExtra(WebSocketService.START_WEBSOCKET,true);
-                    intent.putExtra(WebSocketService.USER_ID,object.getLong("id"));
-                    startService(service);
                     finish();
                 } else if (code == 102) {
                     mPasswordView.setError(message + "");
@@ -365,6 +380,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 }
             } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (WriterException e) {
                 e.printStackTrace();
             }
 

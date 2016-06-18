@@ -40,5 +40,12 @@
     <string name="friend_list">好友列表</string>
     <string name="not_set_sign">他还没有设置个性签名</string>
     <string name="press_play_voice">点击播放语音消息</string>
+    <string name="add_or_not">是否添加</string>
+    <string name="as_your_friend">为你的好友</string>
+    <string name="action_ok">确定</string>
+    <string name="already_friend">你们已经是好友了</string>
+    <string name="add_friend_success">好友添加成功</string>
+    <string name="scan_qr_code">请扫描二维码</string>
+    <string name="share">分享</string>
 
 </resources>

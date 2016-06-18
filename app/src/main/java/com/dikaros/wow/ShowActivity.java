@@ -1,12 +1,19 @@
 package com.dikaros.wow;
 
 import android.animation.ObjectAnimator;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -26,6 +33,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -39,18 +47,23 @@ import com.dikaros.wow.util.AlertUtil;
 import com.dikaros.wow.util.SimpifyUtil;
 import com.dikaros.wow.util.Util;
 import com.dikaros.wow.util.annotation.FindView;
+import com.dikaros.wow.util.annotation.OnClick;
 import com.dikaros.wow.view.RecyclerViewDivider;
 import com.google.gson.Gson;
+import com.google.zxing.WriterException;
 import com.readystatesoftware.viewbadger.BadgeView;
 import com.squareup.picasso.Picasso;
+import com.zxing.activity.CaptureActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -58,6 +71,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 /**
  * 朋友列表活动，主要展示好友列表
  * 左边抽屉布局进行基本操作
+ *
  * @see NormalAsyNet 自定义的网络工具，基于okHttp
  * @see SimpifyUtil 快速view绑定工具
  */
@@ -71,7 +85,6 @@ public class ShowActivity extends AppCompatActivity
 
     @FindView(R.id.srl_friend)
     SwipeRefreshLayout srlMain;
-
 
     //朋友集合
     List<Friend> friends;
@@ -111,6 +124,32 @@ public class ShowActivity extends AppCompatActivity
     boolean blankOpen = false;
 
 
+    @FindView(R.id.iv_qr_code)
+    ImageView ivQrCode;
+
+    @FindView(R.id.tv_qr_title)
+    TextView tvQrTitle;
+
+    public static final String WOW_SCHEME = "wow://com.dikaros.wow/open?jsonFile=";
+
+    public static final String HTTP_TITLE = "http://123.206.75.202:8080/WowServer/jump.html?jsonFile=";
+
+    //从网页链接创建activity标示
+    boolean isCreateFromWowScheme = false;
+
+
+    public static final int ACTION_SCAN_QR_CODE = 1;
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String temp;
+        if ((temp = intent.getDataString()) != null) {
+            //添加好友
+            addFriendWithStr(temp.substring(WOW_SCHEME.length()));
+        }
+    }
+
     /**
      * OnCreate方法，在这里初始化信息
      *
@@ -123,6 +162,20 @@ public class ShowActivity extends AppCompatActivity
         /**
          * @see SimpifyUtil具体信息详见快速查找工具
          */
+
+        if (Util.getPreference(this, "user_msg") == null) {
+            AlertUtil.toastMess(this, "请先登录");
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        } else {
+            isCreateFromWowScheme = true;
+        }
+
+        String temp;
+        if ((temp = getIntent().getDataString()) != null) {
+            Log.e("wow", temp);
+        }
         SimpifyUtil.findAll(this);
         //设置toolBar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -226,6 +279,89 @@ public class ShowActivity extends AppCompatActivity
 
 
     /**
+     * 添加好友
+     *
+     * @param base64File
+     */
+    public void addFriendWithStr(String base64File) {
+        try {
+            //根元素
+            final JSONObject root = new JSONObject(Util.getFromBase64(base64File));
+            //判断框
+            final long friendId = root.getLong("userId");
+            //遍历查看是否好友关系已经存在
+            boolean hasFriend = false;
+            for (Friend friend : friends) {
+                if (friend.getFriendId() == friendId) {
+                    hasFriend = true;
+                    break;
+                }
+            }
+            if (!hasFriend) {
+                AlertUtil.judgeAlertDialog(this, getString(R.string.add_friend) + " uid:" + friendId, getString(R.string.add_or_not) + root.getString("userName") + getString(R.string.as_your_friend), new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        JSONObject param = new JSONObject();
+                        try {
+                            param.put("hostId", Config.userId);
+                            param.put("friendId", friendId);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        NormalAsyNet normalAsyNet = new NormalAsyNet(Config.HTTP_ADD_FRIEND, "jsonFile", param.toString(), AsyNet.NetMethod.POST);
+                        normalAsyNet.setOnNetStateChangedListener(new AsyNet.OnNetStateChangedListener<String>() {
+                            @Override
+                            public void beforeAccessNet() {
+
+                            }
+
+                            @Override
+                            public void afterAccessNet(String result) {
+                                Log.e("wow", "add_friend_result" + result);
+                                if (result != null && !result.equals("{}")) {
+                                    //解析结果
+                                    JSONObject root = null;
+                                    try {
+                                        root = new JSONObject(result);
+                                        if (root.getInt("code") == 400) {
+                                            AlertUtil.toastMess(ShowActivity.this, getString(R.string.add_friend_success));
+                                            accessNet();
+                                        } else {
+                                            AlertUtil.toastMess(ShowActivity.this, getString(R.string.add_friend_faild));
+
+                                        }
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+                            }
+
+                            @Override
+                            public void whenException(Throwable t) {
+                                Log.e("wow", t + "");
+                            }
+
+                            @Override
+                            public void onProgress(Integer progress) {
+
+                            }
+                        });
+                        normalAsyNet.execute();
+                    }
+                }, null);
+            } else {
+                //普通提醒
+                AlertUtil.simpleAlertDialog(this, getString(R.string.already_friend), null);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
      * 打开菜单
      * fab会显示一个带有惯性的旋转动画
      * 蒙版动态显示（由透明到半透明）
@@ -248,8 +384,12 @@ public class ShowActivity extends AppCompatActivity
         alphaAnimation.setFillAfter(true);
         //启动动画
         blankBoard.startAnimation(alphaAnimation);
+        rcvFriend.setVisibility(View.VISIBLE);
+
         //设置fab标志为开启
         blankOpen = true;
+        ivQrCode.setVisibility(View.GONE);
+        tvQrTitle.setVisibility(View.GONE);
     }
 
     /**
@@ -276,7 +416,10 @@ public class ShowActivity extends AppCompatActivity
         //蒙版不显示
         blankBoard.setVisibility(View.GONE);
         //设置标志值
+        rcvFriend.setVisibility(View.VISIBLE);
         blankOpen = false;
+        ivQrCode.setVisibility(View.GONE);
+        tvQrTitle.setVisibility(View.GONE);
     }
 
 
@@ -344,8 +487,11 @@ public class ShowActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
+        } else if (blankOpen) {
+            closeFabMenu(findViewById(R.id.fab_add));
         } else {
             super.onBackPressed();
+
         }
     }
 
@@ -361,23 +507,30 @@ public class ShowActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         //获得ID
         int id = item.getItemId();
-        //音乐
-        if (id == R.id.nav_music) {
-        }
-        //相册
-        else if (id == R.id.nav_gallery) {
 
-        }
-        //视频
-        else if (id == R.id.nav_video) {
-
-        }
         //设置
-        else if (id == R.id.nav_setting) {
+        if (id == R.id.nav_setting) {
 
         }
         //分享
         else if (id == R.id.nav_share) {
+//            if (imagePath == null || imagePath.equals("")) {
+//                // 提示图片不存在
+//                ToastUtil.show(EditPicActivity.this, R.string.pic_share_error);
+//            } else {
+//                // 找到对应的文件引用
+//                File f = new File(imagePath);
+//                if (f != null && f.exists() && f.isFile()) {
+//                    intent.setType("image/*");
+//                    Uri u = Uri.fromFile(f);
+//                    intent.putExtra(Intent.EXTRA_STREAM, u);
+//                }
+//            }
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "Wow");
+            //自定义选择框的标题
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share)));
+            //
 
         }
         //发送
@@ -442,6 +595,15 @@ public class ShowActivity extends AppCompatActivity
                 rcvFriend.getAdapter().notifyDataSetChanged();
             } catch (JSONException e) {
                 e.printStackTrace();
+            }
+        }
+        //如果是从scheme启动的activity
+        if (isCreateFromWowScheme) {
+            String temp;
+            if ((temp = getIntent().getDataString()) != null) {
+                //添加好友
+                addFriendWithStr(temp.substring(WOW_SCHEME.length()));
+                isCreateFromWowScheme = false;
             }
         }
     }
@@ -567,6 +729,59 @@ public class ShowActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * 邀请好友
+     */
+    @OnClick(R.id.btn_invite_friend)
+    public void btnInviteFriendClicked(View v) {
+        //设置二维码显示
+        ivQrCode.setVisibility(View.VISIBLE);
+        //设置标题显示
+        tvQrTitle.setVisibility(View.VISIBLE);
+        Log.e("wow", Config.userId + "--" + Config.userName + "--" + Config.userMessage);
+        rcvFriend.setVisibility(View.GONE);
+        JSONObject j = new JSONObject();
+
+        try {
+            j.put("userId", Config.userId);
+            j.put("userName", Config.userName);
+            j.put("personalMessage", Config.userMessage);
+            j.put("avatarPath", Config.HTTP_AVATAR_ADDRESS + "/image/avator/" + Config.userId + ".png");
+            ivQrCode.setImageBitmap(Util.generateQrCode("http://123.206.75.202:8080/WowServer/jump.html?jsonFile=" + Util.toBase64(j.toString())));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    /**
+     * 增加好友
+     */
+    @OnClick(R.id.btn_add_friend)
+    public void btnAddFriendClicked(View v) {
+        Intent i = new Intent(this, CaptureActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivityForResult(i, ACTION_SCAN_QR_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == ACTION_SCAN_QR_CODE) {
+//                data.get
+//                Log.e("wow","scan_"+data.getExtras().getString("result"));
+                String result = data.getExtras().getString("result");
+                if (result != null && result.startsWith("http")) {
+                    addFriendWithStr(result.substring(HTTP_TITLE.length()));
+                }
+            }
+
+        }
+    }
 
     /**
      * 广播接收器

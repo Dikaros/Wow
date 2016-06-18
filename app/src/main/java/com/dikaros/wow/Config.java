@@ -1,5 +1,7 @@
 package com.dikaros.wow;
 
+import android.graphics.Bitmap;
+
 import com.dikaros.wow.bean.ImMessage;
 
 import java.util.ArrayList;
@@ -15,6 +17,11 @@ public class Config {
      * app标识
      */
     public static String APP_ID = "com.dikaros.wow";
+
+    /**
+     * 用户二维码
+     */
+    public static Bitmap USER_QR_CODE = null;
 
     /**
      * 用户id
@@ -94,5 +101,10 @@ public class Config {
      * 查询好友地址
      */
     public static final String HTTP_GET_FRIEND = "http://123.206.75.202:8080/WowServer/friend/query.do";
+
+    /**
+     * 增加好友地址
+     */
+    public static final String HTTP_ADD_FRIEND = "http://123.206.75.202:8080/WowServer/friend/add.do";
 
 }

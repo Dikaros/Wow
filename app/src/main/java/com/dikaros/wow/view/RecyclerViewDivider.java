@@ -10,28 +10,39 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.view.View;
 /**
+ * RecyclerView item分割线
  * Created by Dikaros on 2016/6/14.
  */
 public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
+    //定义分割线类型
     private static final int[] ATTRS = new int[]{
             android.R.attr.listDivider
     };
 
+    //水平分割线
     public static final int HORIZONTAL_LIST = LinearLayoutManager.HORIZONTAL;
 
+    //垂直分割线
     public static final int VERTICAL_LIST = LinearLayoutManager.VERTICAL;
 
+    //分割线资源
     private Drawable mDivider;
 
+    //布局排版
     private int mOrientation;
 
     public RecyclerViewDivider(Context context, int orientation) {
+        //获取attr
         final TypedArray a = context.obtainStyledAttributes(ATTRS);
         mDivider = a.getDrawable(0);
         a.recycle();
         setOrientation(orientation);
     }
 
+    /**
+     * 设置布局
+     * @param orientation
+     */
     public void setOrientation(int orientation) {
         if (orientation != HORIZONTAL_LIST && orientation != VERTICAL_LIST) {
             throw new IllegalArgumentException("invalid orientation");
@@ -41,7 +52,6 @@ public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
 
     @Override
     public void onDraw(Canvas c, RecyclerView parent) {
-//        Log.v("recyclerview - itemdecoration", "onDraw()");
 
         if (mOrientation == VERTICAL_LIST) {
             drawVertical(c, parent);
@@ -52,6 +62,11 @@ public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
     }
 
 
+    /**
+     * 绘制垂直分割线
+     * @param c
+     * @param parent
+     */
     public void drawVertical(Canvas c, RecyclerView parent) {
         final int left = parent.getPaddingLeft();
         final int right = parent.getWidth() - parent.getPaddingRight();
@@ -69,6 +84,11 @@ public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
         }
     }
 
+    /**
+     * 绘制水平分割线
+     * @param c
+     * @param parent
+     */
     public void drawHorizontal(Canvas c, RecyclerView parent) {
         final int top = parent.getPaddingTop();
         final int bottom = parent.getHeight() - parent.getPaddingBottom();

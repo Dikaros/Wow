@@ -9,6 +9,9 @@ import org.java_websocket.handshake.ServerHandshake;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 
 /**
  * WebSocket基类
@@ -23,24 +26,19 @@ public class BaseWebSocketClient extends WebSocketClient {
      */
     public BaseWebSocketClient(String uri) throws URISyntaxException {
         super(new URI(uri), new Draft_17());
-//		String aString = new String(byte[], Charset);
-        String buffer;
-
-//		String aString = new String(buffer.getBytes(), "utf-8");b
 
     }
 
     public interface WebSocketClientListener{
         public void onOpen();
         public void onMessage(String message);
-        public void onClose(boolean remote);
+        public void onClose(boolean remote,String reason);
     }
     //监听器接口
     private WebSocketClientListener webSocketListener;
 
     public BaseWebSocketClient(URI serverUri, Draft draft) {
         super(serverUri, draft);
-//		s
     }
 
     public BaseWebSocketClient(URI serverURI) {
@@ -58,13 +56,14 @@ public class BaseWebSocketClient extends WebSocketClient {
 
     }
 
+
     @Override
     public void onFragment(Framedata fragment) {
     }
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        webSocketListener.onClose(remote);
+        webSocketListener.onClose(remote,reason);
         close(code);
     }
 

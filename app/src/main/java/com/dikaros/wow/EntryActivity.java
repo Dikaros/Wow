@@ -1,12 +1,14 @@
 package com.dikaros.wow;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.dikaros.wow.util.Util;
+import com.google.zxing.WriterException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,6 +27,15 @@ public class EntryActivity extends AppCompatActivity {
                     break;
                 case 1:
                     Intent intent2 = new Intent(EntryActivity.this, ShowActivity.class);
+                    Intent i_getvalue = getIntent();
+                    String action = i_getvalue.getAction();
+
+                    if(Intent.ACTION_VIEW.equals(action)){
+                        Uri uri = i_getvalue.getData();
+                        if(uri != null){
+                            String name = uri.getQueryParameter("json");
+                        }
+                    }
 
                     startActivity(intent2);
                     finish();
@@ -43,7 +54,7 @@ public class EntryActivity extends AppCompatActivity {
             public void run() {
                 try {
                     //休眠一秒
-                    sleep(1000);
+                    sleep(200);
                 } catch (InterruptedException e) {
 
                     e.printStackTrace();
@@ -72,7 +83,16 @@ public class EntryActivity extends AppCompatActivity {
                         Config.userName = userName;
                         //设置用户信息
                         Config.userMessage = root.getString("personalMessage");
+
+                        JSONObject j = new JSONObject();
+                        j.put("userId",Config.userId);
+                        j.put("userName",Config.userName);
+                        j.put("personalMessage",Config.userMessage);
+                        j.put("avatarPath",Config.HTTP_AVATAR_ADDRESS+"/image/avator/" +Config.userId + ".png");
+                        Config.USER_QR_CODE = Util.generateQrCode(Util.toBase64(j.toString()));
                     } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (WriterException e) {
                         e.printStackTrace();
                     }
                 }

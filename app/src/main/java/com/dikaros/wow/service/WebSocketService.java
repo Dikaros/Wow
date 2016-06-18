@@ -11,6 +11,7 @@ import com.dikaros.wow.net.websocket.BaseWebSocketClient;
 import com.google.gson.Gson;
 
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -147,19 +148,20 @@ public class WebSocketService extends Service {
             }
 
             @Override
-            public void onClose(boolean remote) {
+            public void onClose(boolean remote,String message) {
                 messageCount = 0;
                 Intent closeIntent = new Intent();
                 closeIntent.setAction(ACTION_WEBSOCKET_CLOSE);
                 closeIntent.putExtra(WEBSOCKET_CLOSE_REASON, remote);
                 sendBroadcast(closeIntent);
-                Log.e("websocket", "websocket close");
+                Log.e("websocket", "websocket close"+message);
                 connected = false;
                // 试着重新连接
                 client.close();
                 client = null;
 
             }
+
         });
         //连接服务器
         client.connect();
