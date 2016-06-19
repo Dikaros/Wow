@@ -2,6 +2,7 @@ package com.dikaros.wow;
 
 import android.graphics.Bitmap;
 
+import com.dikaros.wow.bean.Friend;
 import com.dikaros.wow.bean.ImMessage;
 
 import java.util.ArrayList;
@@ -44,6 +45,8 @@ public class Config {
      * 发送信息map
      */
     public static HashMap<Long, List<ImMessage>> sendedMap = new HashMap<>();
+
+    public static HashMap<Long,Friend> friendList = new HashMap<>();
 
     /**
      * 增加信息到发送信息表

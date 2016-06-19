@@ -41,6 +41,10 @@
     <string name="add_friend_success">好友添加成功</string>
     <string name="scan_qr_code">请扫描二维码</string>
     <string name="share">分享</string>
+    <string name="share_to">分享到</string>
+    <string name="about">关于</string>
+    <string name="notification">通知</string>
+    <string name="version">版本号</string>
 
 
 </resources>

@@ -87,7 +87,7 @@ public class ShowActivity extends AppCompatActivity
     SwipeRefreshLayout srlMain;
 
     //朋友集合
-    List<Friend> friends;
+    public static List<Friend> friends;
 
     //蒙版，点击fab后显示
     @FindView(R.id.rl_blank)
@@ -510,28 +510,18 @@ public class ShowActivity extends AppCompatActivity
 
         //设置
         if (id == R.id.nav_setting) {
-
+            Intent intent = new Intent(this,SettingActivity.class);
+            startActivity(intent);
         }
         //分享
         else if (id == R.id.nav_share) {
-//            if (imagePath == null || imagePath.equals("")) {
-//                // 提示图片不存在
-//                ToastUtil.show(EditPicActivity.this, R.string.pic_share_error);
-//            } else {
-//                // 找到对应的文件引用
-//                File f = new File(imagePath);
-//                if (f != null && f.exists() && f.isFile()) {
-//                    intent.setType("image/*");
-//                    Uri u = Uri.fromFile(f);
-//                    intent.putExtra(Intent.EXTRA_STREAM, u);
-//                }
-//            }
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.putExtra(Intent.EXTRA_TEXT, "Wow");
-            //自定义选择框的标题
-            startActivity(Intent.createChooser(shareIntent, getString(R.string.share)));
-            //
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "推荐一个聊天软件\nhttp://123.206.75.202:8080/WowServer/wow.apk");
+            shareIntent.setType("text/plain");
 
+            //设置分享列表的标题，并且每次都显示分享列表
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_to)));
         }
         //发送
         else if (id == R.id.nav_send) {
@@ -589,6 +579,7 @@ public class ShowActivity extends AppCompatActivity
                     Friend f = gson.fromJson(o.toString(), Friend.class);
                     Log.e("wow_friend", f.toString());
                     friends.add(f);
+                    Config.friendList.put(f.getFriendId(),f);
                 }
                 Log.e("friend_count", friends.size() + "");
                 //更新视图

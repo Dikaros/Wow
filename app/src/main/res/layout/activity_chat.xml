@@ -49,15 +49,26 @@
                 android:layout_weight="1"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
+                <Button
+                    android:id="@+id/btn_chat_ptt"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/panel_ptt" />
+                <Button
+                    android:id="@+id/btn_chat_camera"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/panel_camera" />
+
 
                 <EditText
                     android:id="@+id/et_conversation"
-                    android:layout_width="fill_parent"
+                    android:layout_width="0dp"
                     android:layout_height="fill_parent"
                     android:layout_marginBottom="2dp"
                     android:layout_marginLeft="10dp"
                     android:layout_marginTop="2dp"
-                    android:layout_weight="1"
+                    android:layout_weight="4"
                     android:background="@drawable/bg_edit_text"
                     android:paddingBottom="6dp"
                     android:paddingLeft="10dp"
@@ -67,13 +78,13 @@
 
                 <Button
                     android:id="@+id/btn_conversation_send"
-                    android:layout_width="fill_parent"
+                    android:layout_width="0dp"
                     android:layout_height="fill_parent"
                     android:layout_marginBottom="2dp"
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
                     android:layout_marginTop="2dp"
-                    android:layout_weight="4"
+                    android:layout_weight="1"
                     android:background="@drawable/bg_send_button"
                     android:enabled="true"
                     android:text="@string/send"
@@ -81,22 +92,12 @@
                     android:textSize="15sp" />
             </LinearLayout>
 
-            <LinearLayout
+          <!--  <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:orientation="horizontal">
 
-                    <Button
-                        android:id="@+id/btn_chat_ptt"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/panel_top_bottom"
-                        android:layout_marginLeft="@dimen/panel_left_right"
-                        android:layout_marginRight="@dimen/panel_left_right"
-                        android:layout_marginTop="@dimen/panel_top_bottom"
-                        android:layout_weight="1"
-                        android:background="@drawable/panel_ptt" />
 
                     <View
                         android:layout_width="0dp"
@@ -163,7 +164,7 @@
                         android:layout_weight="1"
                         android:background="@drawable/panel_plus" />
             </LinearLayout>
-
+-->
 
             <!--t特殊功能区-->
             <HorizontalScrollView

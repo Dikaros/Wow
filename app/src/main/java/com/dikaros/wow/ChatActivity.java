@@ -195,6 +195,8 @@ public class ChatActivity extends AppCompatActivity {
 
         bindService(service,connection,BIND_AUTO_CREATE);
 
+        setTitle(friend.getFriendMark()!=null?friend.getFriendMark():friend.getFriendName());
+        setTitle("hehe");
 
     }
 
