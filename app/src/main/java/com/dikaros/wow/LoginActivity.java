@@ -57,7 +57,10 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
-public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor>, AsyNet.OnNetStateChangedListener<String> {
+/**
+ * 登录活动
+ */
+public class LoginActivity extends AppCompatActivity implements AsyNet.OnNetStateChangedListener<String> {
 
     /**
      * Id to identity READ_CONTACTS permission request.
@@ -218,14 +221,21 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     /**
-     * Shows the progress UI and hides the login form.
+     * 显示进度条隐藏登录表单
+     * 这里需要判断Android的版本
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
+        /**
+         * 如果大于api13则显示动画
+         * 否则仅仅是显示和隐藏
+         */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            //动画显示时间
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
+            //设置登录表单的显示情况
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            //设置动画
             mLoginFormView.animate().setDuration(shortAnimTime).alpha(
                     show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
                 @Override
@@ -233,8 +243,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
             });
-
+            //设置进度条显示情况
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            //进度条动画
             mProgressView.animate().setDuration(shortAnimTime).alpha(
                     show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
                 @Override
@@ -248,50 +259,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return new CursorLoader(this,
-                Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
-                        ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
 
-                ContactsContract.Contacts.Data.MIMETYPE +
-                        " = ?", new String[]{ContactsContract.CommonDataKinds.Email
-                .CONTENT_ITEM_TYPE},
-
-                ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        List<String> emails = new ArrayList<>();
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            emails.add(cursor.getString(ProfileQuery.ADDRESS));
-            cursor.moveToNext();
-        }
-
-        addEmailsToAutoComplete(emails);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-
-    }
-
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(LoginActivity.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-
-        mPhoneView.setAdapter(adapter);
-    }
-
+    /**
+     * 网络访问前
+     * 显示进度条
+     */
     @Override
     public void beforeAccessNet() {
         showProgress(true);
     }
 
+    /**
+     * 网络访问后
+     * @param result 访问结果
+     */
     @Override
     public void afterAccessNet(String result) {
         /*
@@ -330,7 +311,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     j.put("userName",Config.userName);
                     j.put("personalMessage",Config.userMessage);
                     j.put("avatarPath",Config.HTTP_AVATAR_ADDRESS+"/image/avator/" +Config.userId + ".png");
+                    //调用二维码函数保存用户的部分信息
                     Config.USER_QR_CODE = Util.generateQrCode(Util.toBase64(j.toString()));
+                    //启动聊天服务
                     startService(service);
                     //启动activity
                     Intent intent = new Intent(this,ShowActivity.class);

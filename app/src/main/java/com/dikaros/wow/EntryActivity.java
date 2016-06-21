@@ -52,13 +52,8 @@ public class EntryActivity extends AppCompatActivity {
         new Thread() {
             @Override
             public void run() {
-                try {
-                    //休眠一秒
-                    sleep(200);
-                } catch (InterruptedException e) {
 
-                    e.printStackTrace();
-                }
+
                 //获取本地存储的用户信息
                 String userMsg = Util.getPreference(EntryActivity.this, "user_msg");
 

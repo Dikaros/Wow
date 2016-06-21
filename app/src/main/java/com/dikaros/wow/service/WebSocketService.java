@@ -1,9 +1,6 @@
 package com.dikaros.wow.service;
 
-import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.Application;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -17,19 +14,17 @@ import android.util.Log;
 import com.dikaros.wow.ChatActivity;
 import com.dikaros.wow.Config;
 import com.dikaros.wow.R;
-import com.dikaros.wow.ShowActivity;
 import com.dikaros.wow.bean.ImMessage;
 import com.dikaros.wow.net.websocket.BaseWebSocketClient;
-import com.dikaros.wow.util.AlertUtil;
 import com.dikaros.wow.util.Util;
 import com.google.gson.Gson;
 
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
+/**
+ * 聊天服务
+ */
 public class WebSocketService extends Service {
 
 
@@ -72,15 +67,12 @@ public class WebSocketService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
         return null;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-//        Timer timer=new Timer();
-//        timer.schedule(task,2000,10000);
 
     }
 
@@ -90,23 +82,34 @@ public class WebSocketService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        /*
+        通过startService调用Service
+        如果意图不为空则判断其中是否附带有START_WEBSOCKET,CLOSE_WEBSOCKET,SEND_MESSAGE等参数
+        如果有则分别执行启动服务，关闭服务和发送信息的行为
+         */
         if (intent != null) {
+            //启动服务
             boolean start = intent.getBooleanExtra(START_WEBSOCKET, false);
             long id = intent.getLongExtra(USER_ID, 0);
             if (start && client == null) {
                 doConnectWebSocket(id);
             }
 
+            //关闭服务
             boolean close = intent.getBooleanExtra(CLOSE_WEBSOCKET, false);
             if (close && client != null) {
                 client.close();
                 client = null;
             }
 
+            //发送信息
             String message = intent.getStringExtra(SEND_MESSAGE);
             if (message != null && client != null) {
                 Log.e("websocket", "send" + message);
+                //发送信息
                 client.send(message);
+                //保存到数据库
+//                MessageDao.getInstance(this).save(message);
             }
         }
         return START_STICKY;
@@ -137,10 +140,6 @@ public class WebSocketService extends Service {
                 Intent openIntent = new Intent();
                 openIntent.setAction(ACTION_WEBSOCKET_OPEN);
                 sendBroadcast(openIntent);
-//                Random random = new Random();
-//                int userId = random.nextInt(89999)+10000;
-//                client.send("{\"mtype\":\"100100\",\"tuser\":null,\"fuser\":\""+userId+"\",\"messageBody\":null}");
-//                Log.i("websocket","send:{\"mtype\":\"100100\",\"tuser\":null,\"fuser\":\""+userId+"\",\"messageBody\":null}");
                 startOnce = true;
                 connected = true;
             }
@@ -149,41 +148,52 @@ public class WebSocketService extends Service {
             public void onMessage(String message) {
                 messageCount++;
                 Log.e("websocket", "websocket onMessage" + messageCount);
+                //保存信息到数据库
+//                MessageDao.getInstance(WebSocketService.this).save(message);
                 ImMessage msg = gson.fromJson(message, ImMessage.class);
                 if (msg != null) {
                     Config.addToReveivedMap(msg);
                     //保存本地信息
                 }
+                //构建intent准备发送广播
                 Intent messageIntent = new Intent();
+                //设置Action为Websocekt有信息
                 messageIntent.setAction(ACTION_WEBSOCKET_ON_MESSAGE);
+                //信息内容
                 messageIntent.putExtra(WEBSOCKET_MESSAGE, msg);
+                //信息计数器
                 messageIntent.putExtra(DATA_MESSAGE_COUNT, messageCount);
+                //发送广播
                 sendBroadcast(messageIntent);
-                //如果通知开启
+                //如果用户设置中通知是开启状态
                 if (Util.getBooleanPreference(WebSocketService.this, "notification_stat")) {
+                    //获得活动管理器
                     ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                    //获取当前互动栈顶的活动信息
                     List<ActivityManager.RunningTaskInfo> runningTaskInfos = manager.getRunningTasks(1);
                     String taskTop = null;
                     if (runningTaskInfos != null) {
                         taskTop = runningTaskInfos.get(0).topActivity.getShortClassName();
                     }
                     Log.e("wow", taskTop + "");
+                    //如果不是聊天活动则发送一条通知
                     if (!taskTop.equals(".ChatActivity")) {
-                        Log.e("wow","启动通知");
+                        Log.e("wow", "启动通知");
+                        //通知内容
                         String sendMessage = null;
-                        if (msg.getType()==1){
-                            sendMessage=Util.getFromBase64(msg.getMsg());
-                        }else if (msg.getType()==2){
-                            sendMessage="[图片]";
-                        }else if (msg.getType()==3){
-                            sendMessage="[语音]";
+                        if (msg.getType() == 1) {
+                            sendMessage = Util.getFromBase64(msg.getMsg());
+                        } else if (msg.getType() == 2) {
+                            sendMessage = "[图片]";
+                        } else if (msg.getType() == 3) {
+                            sendMessage = "[语音]";
                         }
-
+                        //构建一条通知
                         NotificationCompat.Builder mBuilder =
                                 new NotificationCompat.Builder(WebSocketService.this)
                                         .setSmallIcon(R.mipmap.ic_launcher)
                                         .setContentTitle("你有一条新信息")
-                                        .setContentText(sendMessage+"")
+                                        .setContentText(sendMessage + "")
                                         .setWhen(System.currentTimeMillis())
                                         .setDefaults(NotificationCompat.DEFAULT_ALL)
                                         .setAutoCancel(true);
@@ -203,8 +213,11 @@ public class WebSocketService extends Service {
                                         PendingIntent.FLAG_UPDATE_CURRENT
                                 );
                         mBuilder.setContentIntent(resultPendingIntent);
+
+                        //获取通知管理器
                         NotificationManager mNotificationManager =
                                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                        //发送通知
                         mNotificationManager.notify(1, mBuilder.build());
                     }
                 }
@@ -213,7 +226,9 @@ public class WebSocketService extends Service {
 
             @Override
             public void onClose(boolean remote, String message) {
+                //websocket关闭的时候的回调
                 messageCount = 0;
+                //发送关闭时的广播
                 Intent closeIntent = new Intent();
                 closeIntent.setAction(ACTION_WEBSOCKET_CLOSE);
                 closeIntent.putExtra(WEBSOCKET_CLOSE_REASON, remote);
@@ -231,7 +246,6 @@ public class WebSocketService extends Service {
         client.connect();
     }
 
-    boolean reconnector = false;
 
 
 }

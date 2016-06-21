@@ -42,6 +42,7 @@ import com.dikaros.wow.bean.Friend;
 import com.dikaros.wow.bean.ImMessage;
 import com.dikaros.wow.net.asynet.AsyNet;
 import com.dikaros.wow.net.asynet.NormalAsyNet;
+import com.dikaros.wow.net.asynet.block.Block;
 import com.dikaros.wow.service.WebSocketService;
 import com.dikaros.wow.util.AlertUtil;
 import com.dikaros.wow.util.SimpifyUtil;
@@ -474,6 +475,7 @@ public class ShowActivity extends AppCompatActivity
         net = new NormalAsyNet(Config.HTTP_GET_FRIEND, "jsonFile", "{\"userId\":" + Config.userId + "}", AsyNet.NetMethod.POST);
         //设置回调
         net.setOnNetStateChangedListener(this);
+
         //执行
         net.execute();
     }

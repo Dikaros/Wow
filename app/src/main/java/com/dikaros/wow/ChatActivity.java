@@ -40,6 +40,7 @@ import android.widget.Toast;
 
 import com.dikaros.wow.bean.Friend;
 import com.dikaros.wow.bean.ImMessage;
+import com.dikaros.wow.local.MessageDao;
 import com.dikaros.wow.service.AudioService;
 import com.dikaros.wow.service.WebSocketService;
 import com.dikaros.wow.util.AlertUtil;
@@ -114,15 +115,19 @@ public class ChatActivity extends AppCompatActivity {
         }
     };
 
+    //音频
     public static final int ACTION_AUDIO = 0;
 
     public static final int ACTION_VIDEO = 1;
 
     public static final int ACTION_IMAGE = 2;
 
+    //摄像头
     public static final int ACTION_CARAMA = 3;
 
+    //当前缓存的信息
     List<ImMessage> messages = new ArrayList<>();
+
     int startPosition;
 
     @Override
@@ -134,6 +139,10 @@ public class ChatActivity extends AppCompatActivity {
         SimpifyUtil.findAll(this);
         btnSend.setEnabled(false);
         receiver = new MyReceiver();
+//        messages.addAll(MessageDao.getInstance(this).queryByFriendId(friend.getFriendId(),true));
+//        messages.addAll(MessageDao.getInstance(this).queryByFriendId(friend.getFriendId(),false));
+
+
         //增加接收的历史信息
         if (Config.reveivedMap.containsKey(friend.getFriendId())) {
             //添加进来
